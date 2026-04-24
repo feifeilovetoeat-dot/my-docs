@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SP CB 未登录用户登录率提升 — 方案汇报</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; color: #222; background: #f0f2f5; }
+
+  .page { max-width: 1000px; margin: 32px auto 60px; }
+
+  /* Cover */
+  .cover { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%); color: #fff; border-radius: 12px; padding: 52px 52px 44px; margin-bottom: 20px; }
+  .cover .tag { display: inline-block; background: rgba(255,255,255,.15); border-radius: 20px; padding: 4px 14px; font-size: 12px; margin-bottom: 20px; }
+  .cover h1 { font-size: 26px; font-weight: 700; line-height: 1.4; margin-bottom: 12px; }
+  .cover .sub { font-size: 14px; color: rgba(255,255,255,.65); line-height: 1.7; max-width: 600px; }
+  .cover .meta { margin-top: 28px; display: flex; gap: 28px; flex-wrap: wrap; }
+  .cover .meta-item { font-size: 12px; color: rgba(255,255,255,.5); }
+  .cover .meta-item strong { display: block; font-size: 15px; color: #fff; margin-top: 2px; }
+
+  /* Card */
+  .card { background: #fff; border-radius: 12px; margin-bottom: 16px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+  .card-header { padding: 18px 28px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #f0f2f5; }
+  .card-header .step-num { width: 28px; height: 28px; border-radius: 50%; background: #1a1a2e; color: #fff; font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .card-header h2 { font-size: 15px; font-weight: 700; color: #1a1a2e; }
+  .card-header .card-tag { margin-left: auto; font-size: 11px; padding: 3px 10px; border-radius: 10px; font-weight: 600; }
+  .tag-data { background: #e8f0fe; color: #1a73e8; }
+  .tag-insight { background: #fce8e6; color: #c5221f; }
+  .tag-strategy { background: #e6f4ea; color: #188038; }
+  .tag-action { background: #fef7e0; color: #b06000; }
+  .card-body { padding: 20px 28px 24px; }
+
+  /* Metric row */
+  .metric-row { display: flex; gap: 12px; margin: 12px 0; flex-wrap: wrap; }
+  .metric-box { flex: 1; min-width: 130px; border-radius: 8px; padding: 14px 16px; border: 1.5px solid #eee; }
+  .metric-box .val { font-size: 24px; font-weight: 700; }
+  .metric-box .lbl { font-size: 11px; color: #888; margin-top: 3px; }
+  .metric-box.red { border-color: #fca5a5; background: #fff5f5; }
+  .metric-box.red .val { color: #dc2626; }
+  .metric-box.blue { border-color: #93c5fd; background: #eff6ff; }
+  .metric-box.blue .val { color: #1d4ed8; }
+  .metric-box.green { border-color: #86efac; background: #f0fdf4; }
+  .metric-box.green .val { color: #16a34a; }
+  .metric-box.gray { border-color: #e5e7eb; background: #f9fafb; }
+  .metric-box.gray .val { color: #6b7280; }
+
+  /* Funnel */
+  .funnel { display: flex; align-items: center; gap: 0; margin: 16px 0; flex-wrap: wrap; }
+  .funnel-step { text-align: center; flex: 1; min-width: 100px; }
+  .funnel-bar { margin: 0 auto; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 13px; }
+  .funnel-label { font-size: 11px; color: #888; margin-top: 6px; }
+  .funnel-arrow { color: #ccc; font-size: 20px; padding: 0 4px; margin-bottom: 20px; }
+  .funnel-rate { font-size: 11px; color: #ef4444; font-weight: 600; text-align: center; margin-top: 2px; }
+
+  /* Two col */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 12px 0; }
+  .col-box { border: 1.5px solid #eee; border-radius: 8px; padding: 14px 16px; }
+  .col-box .col-title { font-size: 12px; font-weight: 700; color: #888; margin-bottom: 8px; text-transform: uppercase; letter-spacing: .5px; }
+  .col-box p { font-size: 13px; line-height: 1.7; color: #444; }
+
+  /* Root cause */
+  .root-cause { background: #fff5f5; border: 1.5px solid #fca5a5; border-radius: 8px; padding: 16px 20px; margin: 14px 0; }
+  .root-cause .rc-title { font-size: 13px; font-weight: 700; color: #dc2626; margin-bottom: 6px; }
+  .root-cause p { font-size: 13px; color: #7f1d1d; line-height: 1.7; }
+
+  /* Insight box */
+  .insight { background: #fffbea; border-left: 3px solid #f59e0b; padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 12px 0; font-size: 13px; color: #78530a; line-height: 1.7; }
+
+  /* Decision tree */
+  .decision { margin: 14px 0; }
+  .d-row { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 12px; }
+  .d-icon { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0; margin-top: 2px; }
+  .d-icon.x { background: #fee2e2; color: #dc2626; }
+  .d-icon.o { background: #dcfce7; color: #16a34a; }
+  .d-content .d-title { font-size: 13px; font-weight: 600; color: #222; }
+  .d-content .d-reason { font-size: 12px; color: #888; margin-top: 2px; line-height: 1.5; }
+
+  /* Solution cards */
+  .sol-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 14px 0; }
+  .sol-card { border-radius: 8px; overflow: hidden; border: 1.5px solid #eee; }
+  .sol-card-header { padding: 10px 14px; font-size: 13px; font-weight: 700; color: #fff; display: flex; justify-content: space-between; align-items: center; }
+  .sol-card-header.recommended { background: #1a1a2e; }
+  .sol-card-header.normal { background: #6b7280; }
+  .sol-card-body { padding: 12px 14px; font-size: 12.5px; color: #555; line-height: 1.7; }
+  .sol-card-body table { font-size: 12px; }
+  .sol-card-body td { padding: 4px 8px; border: none; background: none; }
+  .sol-card-body tr:nth-child(even) td { background: none; }
+  .sol-card-body td:first-child { color: #888; width: 60px; }
+
+  /* Roadmap */
+  .roadmap { display: flex; gap: 0; margin: 14px 0; }
+  .rm-phase { flex: 1; border-right: 2px dashed #e5e7eb; padding: 0 16px 0 0; margin-right: 16px; }
+  .rm-phase:last-child { border-right: none; margin-right: 0; padding-right: 0; }
+  .rm-phase-title { font-size: 11px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 10px; }
+  .rm-item { background: #f8f9fa; border-radius: 6px; padding: 8px 10px; margin-bottom: 8px; font-size: 12px; }
+  .rm-item .rm-name { font-weight: 600; color: #1a1a2e; }
+  .rm-item .rm-desc { color: #888; margin-top: 2px; font-size: 11px; }
+  .rm-item.highlight { background: #eff6ff; border-left: 3px solid #3b82f6; }
+
+  /* Table */
+  table.std { width: 100%; border-collapse: collapse; font-size: 13px; margin: 10px 0; }
+  table.std th { background: #f8f9fa; padding: 8px 12px; text-align: left; border: 1px solid #e5e7eb; font-weight: 600; color: #444; }
+  table.std td { padding: 8px 12px; border: 1px solid #f0f0f0; vertical-align: top; line-height: 1.6; }
+  table.std tr:nth-child(even) td { background: #fafafa; }
+  code { background: #f0f4ff; color: #4f56e0; padding: 1px 5px; border-radius: 3px; font-size: 12px; font-family: monospace; }
+
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+  .badge-red { background: #fee2e2; color: #dc2626; }
+  .badge-green { background: #dcfce7; color: #16a34a; }
+  .badge-blue { background: #dbeafe; color: #1d4ed8; }
+  .badge-gray { background: #f3f4f6; color: #6b7280; }
+
+  p.body { font-size: 13px; line-height: 1.8; color: #555; margin-bottom: 8px; }
+
+  .section-divider { display: flex; align-items: center; gap: 12px; margin: 8px 0 16px; }
+  .section-divider .sd-label { font-size: 11px; font-weight: 700; color: #aaa; text-transform: uppercase; letter-spacing: 1px; white-space: nowrap; }
+  .section-divider .sd-line { flex: 1; height: 1px; background: #eee; }
+
+  .footer { text-align: center; color: #bbb; font-size: 12px; margin-top: 32px; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Cover -->
+  <div class="cover">
+    <div class="tag">产品方案汇报</div>
+    <h1>SP CB 未登录用户登录率提升<br>——数据分析 · 根因定位 · 方案规划</h1>
+    <div class="sub">从数据出发，定位真正卡点，提出可落地的分阶段方案</div>
+    <div class="meta">
+      <div class="meta-item"><span>汇报人</span><strong>riverswu</strong></div>
+      <div class="meta-item"><span>日期</span><strong>2026-04-24</strong></div>
+      <div class="meta-item"><span>业务</span><strong>CB · SP场景</strong></div>
+      <div class="meta-item"><span>核心目标</span><strong>登录率 70% → 71%</strong></div>
+    </div>
+  </div>
+
+  <!-- Step 1: 背景与目标 -->
+  <div class="card">
+    <div class="card-header">
+      <div class="step-num">1</div>
+      <h2>背景与目标</h2>
+      <span class="card-tag tag-data">背景</span>
+    </div>
+    <div class="card-body">
+      <div class="metric-row">
+        <div class="metric-box blue"><div class="val">63~64%</div><div class="lbl">当前服务成功率</div></div>
+        <div class="metric-box green"><div class="val">75%</div><div class="lbl">服务成功率目标</div></div>
+        <div class="metric-box red"><div class="val">70%</div><div class="lbl">SP CB 点击用户登录率（核心卡点）</div></div>
+        <div class="metric-box gray"><div class="val">71%</div><div class="lbl">本次优化目标</div></div>
+      </div>
+      <p class="body">服务成功率卡点之一在于：SP 场景下用户已激活 CB 并产生订单，但因未登录导致订单无法追踪，返现无法到账。核心问题锁定在 <code>SP_Result_CB_Popup</code> 弹窗的登录引导效率不足。</p>
+    </div>
+  </div>
+
+  <!-- Step 2: 数据分析 -->
+  <div class="card">
+    <div class="card-header">
+      <div class="step-num">2</div>
+      <h2>数据分析 — 建立漏斗</h2>
+      <span class="card-tag tag-data">数据</span>
+    </div>
+    <div class="card-body">
+
+      <div class="section-divider"><span class="sd-label">数据来源</span><div class="sd-line"></div></div>
+      <p class="body">通过 <code>v_dwd_log_parse_event_analytics_log_di</code> 表，筛选条件：<code>scene = 'SP_Result_CB_Popup'</code> + <code>business = 2（CB业务）</code> + 未登录用户（<code>user_id = 0</code>），统计近 7 天稳定数据（04-17 ~ 04-20）。</p>
+
+      <div class="section-divider"><span class="sd-label">完整漏斗（稳定期基准）</span><div class="sd-line"></div></div>
+      <div class="funnel">
+        <div class="funnel-step">
+          <div class="funnel-bar" style="background:#1a1a2e;height:60px;width:90%;">1,657</div>
+          <div class="funnel-label">日均曝光用户</div>
+        </div>
+        <div class="funnel-arrow">→</div>
+        <div class="funnel-step">
+          <div class="funnel-bar" style="background:#dc2626;height:8px;width:90%;">189</div>
+          <div class="funnel-label">未关闭用户</div>
+          <div class="funnel-rate">关闭率 88.6% ⚠️</div>
+        </div>
+        <div class="funnel-arrow">→</div>
+        <div class="funnel-step">
+          <div class="funnel-bar" style="background:#2563eb;height:6px;width:90%;">~89</div>
+          <div class="funnel-label">点击登录按钮</div>
+          <div class="funnel-rate">点击率 7.4%</div>
+        </div>
+        <div class="funnel-arrow">→</div>
+        <div class="funnel-step">
+          <div class="funnel-bar" style="background:#16a34a;height:4px;width:90%;">~28</div>
+          <div class="funnel-label">登录成功</div>
+          <div class="funnel-rate">成功率 ~29%</div>
+        </div>
+      </div>
+
+      <div class="section-divider" style="margin-top:20px"><span class="sd-label">点击行为拆解</span><div class="sd-line"></div></div>
+      <div class="two-col">
+        <div class="col-box">
+          <div class="col-title">弹窗内点击分布（近14天）</div>
+          <table class="std">
+            <tr><th>点击类型</th><th>次数</th><th>占比</th></tr>
+            <tr><td>exit_button（关闭）</td><td>14,386</td><td><span class="badge badge-red">88.6%</span></td></tr>
+            <tr><td>sign_in_button（登录）</td><td>1,199</td><td><span class="badge badge-blue">7.4%</span></td></tr>
+            <tr><td>check_my_balance</td><td>644</td><td><span class="badge badge-gray">4.0%</span></td></tr>
+          </table>
+        </div>
+        <div class="col-box">
+          <div class="col-title">登录成功追踪方式</div>
+          <p>通过 <code>dwd_user_guid_map_df</code> 表（guid ↔ user_id 映射），判断点击登录的用户当日是否新增了 user_id 绑定，作为"登录成功"的判断依据。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 3: 根因分析 -->
+  <div class="card">
+    <div class="card-header">
+      <div class="step-num">3</div>
+      <h2>根因分析 — 找到真正卡点</h2>
+      <span class="card-tag tag-insight">关键洞察</span>
+    </div>
+    <div class="card-body">
+
+      <div class="section-divider"><span class="sd-label">已验证方案及结论</span><div class="sd-line"></div></div>
+      <p class="body">此前已上线实验：将弹窗文案强化 CB 关联感（"Log in to claim" + 传递 UTM 参数到登录页），<strong>点击率和登录成功率均无显著变化</strong>。</p>
+
+      <div class="root-cause">
+        <div class="rc-title">⚠️ 根因：文案改的是下游，堵点在上游</div>
+        <p>88.6% 的用户<strong>根本没有读弹窗内容就直接关闭</strong>，文案再好也没有机会被看到。问题不是"文案不够好"，而是<strong>用户在这个时机根本不愿意被打断</strong>。</p>
+      </div>
+
+      <div class="section-divider" style="margin-top:20px"><span class="sd-label">漏斗问题拆解</span><div class="sd-line"></div></div>
+      <table class="std">
+        <tr><th>漏斗层</th><th>问题描述</th><th>根本原因</th></tr>
+        <tr>
+          <td><strong>曝光 → 不关闭</strong><br><span class="badge badge-red">关闭率 88.6%</span></td>
+          <td>绝大多数用户条件反射关闭弹窗，不读内容</td>
+          <td>购物流程中途被强制打断，用户注意力在"继续购物"而非"处理账户"</td>
+        </tr>
+        <tr>
+          <td><strong>不关闭 → 点击登录</strong><br><span class="badge badge-blue">点击率 7.4%</span></td>
+          <td>留下来看的用户中仍有大量不点登录</td>
+          <td>用户认为"CB 已激活，等会儿再登录"，缺乏即时行动动机，感知不到"不登录会损失什么"</td>
+        </tr>
+        <tr>
+          <td><strong>点击 → 登录成功</strong><br><span class="badge badge-gray">成功率 ~29%</span></td>
+          <td>有意向的用户 70% 没完成登录</td>
+          <td>需跳转到独立登录页，注册表单摩擦大，流失严重</td>
+        </tr>
+      </table>
+
+      <div class="insight" style="margin-top:16px">
+        💡 <strong>核心结论：</strong>优化弹窗内部文案 ROI 极低，因为用户在弹窗内的停留时间极短。真正的增量来自两个方向：① 弹窗关闭后继续触达用户（延长转化窗口）；② 弹窗内让用户感知到"关闭 = 放弃这笔钱"（而非欺骗用户）。
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 4: 方案排期 -->
+  <div class="card">
+    <div class="card-header">
+      <div class="step-num">4</div>
+      <h2>方案规划 — 分阶段执行</h2>
+      <span class="card-tag tag-strategy">策略</span>
+    </div>
+    <div class="card-body">
+
+      <div class="section-divider"><span class="sd-label">方向筛选过程</span><div class="sd-line"></div></div>
+      <div class="decision">
+        <div class="d-row">
+          <div class="d-icon x">✕</div>
+          <div class="d-content">
+            <div class="d-title">改变弹窗出现时机（如结账页触发）</div>
+            <div class="d-reason">改动成本过大，涉及核心触发链路，风险高，不在本次范围内</div>
+          </div>
+        </div>
+        <div class="d-row">
+          <div class="d-icon x">✕</div>
+          <div class="d-content">
+            <div class="d-title">活动策划（首登加成、累计未领提醒）</div>
+            <div class="d-reason">当前活动较多，暂不叠加，后续可作为补充手段</div>
+          </div>
+        </div>
+        <div class="d-row">
+          <div class="d-icon x">✕</div>
+          <div class="d-content">
+            <div class="d-title">关闭弹窗后跳转独立新页面</div>
+            <div class="d-reason">用户已明确拒绝后再次强制打断，违反 Chrome Web Store 插件行为规范，有下架风险</div>
+          </div>
+        </div>
+        <div class="d-row">
+          <div class="d-icon o">✓</div>
+          <div class="d-content">
+            <div class="d-title">弹窗内强化"关闭 = 放弃返现"的感知（AB实验，3方案）</div>
+            <div class="d-reason">作用在有意愿停留的 11.4% 用户，开发成本低，优先验证</div>
+          </div>
+        </div>
+        <div class="d-row">
+          <div class="d-icon o">✓</div>
+          <div class="d-content">
+            <div class="d-title">关闭弹窗后展示 Persistent Mini-Bar（主推）</div>
+            <div class="d-reason">延长转化窗口，非打断式，合规风险极低，覆盖 88.6% 的关闭用户</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-divider" style="margin-top:20px"><span class="sd-label">方案一览</span><div class="sd-line"></div></div>
+      <div class="sol-grid">
+        <div class="sol-card">
+          <div class="sol-card-header recommended">
+            方案组 A：弹窗内样式 AB 实验（3组）
+            <span class="badge badge-blue" style="font-size:10px">分期上线</span>
+          </div>
+          <div class="sol-card-body">
+            <table>
+              <tr><td>实验 A</td><td>金额卡片强化（<code>$X.XX Cash Back pending</code>）</td></tr>
+              <tr><td>实验 B</td><td>订单进度卡片（两步进度条 + ⚠️ Pending Login）</td></tr>
+              <tr><td>实验 C</td><td>历史未领损失提示（需历史数据支撑）</td></tr>
+            </table>
+            <div style="margin-top:10px;padding-top:10px;border-top:1px solid #f0f0f0;display:flex;gap:16px;font-size:12px">
+              <span>研发成本 <strong>低~中</strong></span>
+              <span>覆盖用户 <strong>11.4%（留弹窗用户）</strong></span>
+              <span>合规风险 <strong style="color:#16a34a">低</strong></span>
+            </div>
+          </div>
+        </div>
+        <div class="sol-card">
+          <div class="sol-card-header recommended" style="background:#0f3460;">
+            方案组 B：Persistent Mini-Bar（主推）
+            <span class="badge badge-green" style="font-size:10px">重点投入</span>
+          </div>
+          <div class="sol-card-body">
+            <table>
+              <tr><td>触发</td><td>用户点击关闭弹窗后，底部滑入悬浮条</td></tr>
+              <tr><td>内容</td><td><code>💰 $X.XX 待领取 · 登录 → ✕</code></td></tr>
+              <tr><td>消失</td><td>用户主动关闭 / 登录成功 / 离开 Tab</td></tr>
+              <tr><td>特点</td><td>不拦截操作，全程可见，用户自主决策</td></tr>
+            </table>
+            <div style="margin-top:10px;padding-top:10px;border-top:1px solid #f0f0f0;display:flex;gap:16px;font-size:12px">
+              <span>研发成本 <strong>低</strong></span>
+              <span>覆盖用户 <strong>88.6%（关闭用户）</strong></span>
+              <span>合规风险 <strong style="color:#16a34a">极低</strong></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Step 5: 执行路径 -->
+  <div class="card">
+    <div class="card-header">
+      <div class="step-num">5</div>
+      <h2>执行路径</h2>
+      <span class="card-tag tag-action">落地</span>
+    </div>
+    <div class="card-body">
+      <div class="roadmap">
+        <div class="rm-phase">
+          <div class="rm-phase-title">Phase 1 · 当前</div>
+          <div class="rm-item highlight">
+            <div class="rm-name">弹窗样式 AB 实验 A</div>
+            <div class="rm-desc">金额卡片强化，开发成本最低，优先验证</div>
+          </div>
+          <div class="rm-item highlight">
+            <div class="rm-name">Mini-Bar 可行性分析</div>
+            <div class="rm-desc">开发评估实现路径和成本</div>
+          </div>
+        </div>
+        <div class="rm-phase">
+          <div class="rm-phase-title">Phase 2 · 实验结论后</div>
+          <div class="rm-item">
+            <div class="rm-name">弹窗样式 AB 实验 B/C</div>
+            <div class="rm-desc">根据实验 A 结论决定是否继续</div>
+          </div>
+          <div class="rm-item highlight">
+            <div class="rm-name">Mini-Bar 上线</div>
+            <div class="rm-desc">可行性通过后进入开发，AB 实验验证</div>
+          </div>
+        </div>
+        <div class="rm-phase">
+          <div class="rm-phase-title">Phase 3 · 长期</div>
+          <div class="rm-item">
+            <div class="rm-name">一键登录（Google/Apple）</div>
+            <div class="rm-desc">降低点击→成功的摩擦，提升 29% 成功率</div>
+          </div>
+          <div class="rm-item">
+            <div class="rm-name">活动策划</div>
+            <div class="rm-desc">首登加成等，作为补充手段</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-divider" style="margin-top:20px"><span class="sd-label">各方案收益预估</span><div class="sd-line"></div></div>
+      <table class="std">
+        <tr><th>方案</th><th>作用漏斗层</th><th>覆盖用户基数</th><th>保守增量估算</th><th>优先级</th></tr>
+        <tr>
+          <td><strong>弹窗样式优化（A/B/C）</strong></td>
+          <td>曝光 → 点击</td>
+          <td>~189人/日（留弹窗用户）</td>
+          <td>点击率 7.4% → 10%，+4登录/日</td>
+          <td><span class="badge badge-blue">先验证</span></td>
+        </tr>
+        <tr>
+          <td><strong>Persistent Mini-Bar</strong></td>
+          <td>关闭后 → 再次触达</td>
+          <td>~1,468人/日（关闭用户）</td>
+          <td>Mini-Bar 点击率若达 3%，+13登录/日</td>
+          <td><span class="badge badge-green">重点投入</span></td>
+        </tr>
+        <tr>
+          <td><strong>一键登录</strong></td>
+          <td>点击 → 登录成功</td>
+          <td>~89人/日（点击登录用户）</td>
+          <td>成功率 29% → 50%，+19登录/日</td>
+          <td><span class="badge badge-gray">长期规划</span></td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- Step 6: 结论 -->
+  <div class="card">
+    <div class="card-header">
+      <div class="step-num">6</div>
+      <h2>结论与建议</h2>
+      <span class="card-tag tag-strategy">结论</span>
+    </div>
+    <div class="card-body">
+      <table class="std">
+        <tr><th>维度</th><th>核心判断</th></tr>
+        <tr>
+          <td><strong>根因</strong></td>
+          <td>不是文案问题，是 88.6% 的用户关闭弹窗后转化机会为零，存量流量严重浪费</td>
+        </tr>
+        <tr>
+          <td><strong>短期抓手</strong></td>
+          <td>弹窗样式 AB 实验成本低，先跑数据；Mini-Bar 覆盖关闭用户，是最大增量来源</td>
+        </tr>
+        <tr>
+          <td><strong>长期方向</strong></td>
+          <td>一键登录是提升点击→成功率的根本解法，但需要较大研发投入，建议在短期方案验证后推进</td>
+        </tr>
+        <tr>
+          <td><strong>不做什么</strong></td>
+          <td>改变触发时机（成本过大）、关闭后强制新页面（合规风险）、叠加活动（当前活动已多）</td>
+        </tr>
+      </table>
+
+      <div class="insight" style="margin-top:16px">
+        🎯 <strong>一句话总结：</strong>当前弹窗是一次性机会，88.6% 的用户关闭后就永远流失了。Mini-Bar 把"一次机会"变成"全程机会"，是最值得投入的改动，研发成本低、合规风险极低、覆盖用户基数最大。
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">SP CB 未登录用户登录率提升方案 · 2026-04-24 · riverswu</div>
+</div>
+</body>
+</html>
